@@ -1,4 +1,4 @@
-# Builds and installs the Herdr app and herdr-core natively for Windows ARM64.
+# Builds and installs Zendr (the Herdr desktop app, rebranded) and herdr-core natively for Windows ARM64.
 #
 #   .\scripts\build-windows-arm64.ps1                 # core (..\herdr-core) + app
 #   .\scripts\build-windows-arm64.ps1 -SkipCore       # app only

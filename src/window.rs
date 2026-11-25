@@ -658,7 +658,7 @@ impl AppWindow {
         w.apply_look(window, cx);
         w.show_layout_notes(window, cx);
         if let (Some(n), false) = (&name, gone.is_empty()) {
-            let note = json!({ "title": format!("{n} needs mods that aren't here"), "body": format!("Showing Herdr instead. Missing: {}. Your {n} layout file is still there.", gone.join(", ")), "level": "info", "timeout": 12000 });
+            let note = json!({ "title": format!("{n} needs mods that aren't here"), "body": format!("Showing Zendr instead. Missing: {}. Your {n} layout file is still there.", gone.join(", ")), "level": "info", "timeout": 12000 });
             w.open_overlay(mods::new_overlay_id(), json!({ "kind": "toast", "notification": note }), window, cx);
         }
 
@@ -1226,7 +1226,7 @@ impl AppWindow {
     /// What installing layouts kept of the person's own, as toasts.
     fn show_layout_notes(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         for clone in mods::take_sync_notes() {
-            let n = json!({ "title": format!("Your edits are in {clone}"), "body": "Herdr's own layouts and mods can't be changed: clone one to make it yours.", "level": "info", "timeout": 12000 });
+            let n = json!({ "title": format!("Your edits are in {clone}"), "body": "Zendr's own layouts and mods can't be changed: clone one to make it yours.", "level": "info", "timeout": 12000 });
             self.open_overlay(mods::new_overlay_id(), json!({ "kind": "toast", "notification": n }), window, cx);
         }
     }
@@ -2650,7 +2650,7 @@ impl AppWindow {
             Some(slot) if slot.available => Ok(()),
             Some(slot) => Err(slot.error.clone().unwrap_or_else(|| "This machine's layout is unavailable. Try again when it reconnects.".into())),
             None => Err(match machine {
-                Some(m) => format!("Herdr has no machine called {m}. See hc machine ls; machines added with --temp stay out of Herdr."),
+                Some(m) => format!("Zendr has no machine called {m}. See hc machine ls; machines added with --temp stay out of Zendr."),
                 None => "This machine's layout is unavailable. Try again when it reconnects.".into(),
             }),
         }
@@ -3602,7 +3602,7 @@ impl AppWindow {
                     Err(e) => return self.fail(format!("layout: {e}")),
                 };
                 if layout_sync::without_clicks(&self.chrome, &n) != self.chrome {
-                    return self.fail("Only supported click/look fields can change on Herdr's own layouts: clone one for other changes");
+                    return self.fail("Only supported click/look fields can change on Zendr's own layouts: clone one for other changes");
                 }
                 let mut state = layout_sync::State::between(&self.file_chrome, &n);
                 if n.look.theme == self.chrome.look.theme {
@@ -3657,7 +3657,7 @@ impl AppWindow {
             "layout.reset" => {
                 let name = Self::owned(a, "name").unwrap_or_else(|| self.layout_name.clone());
                 let Some((_, text)) = LAYOUTS.iter().find(|(n, _)| *n == name) else {
-                    return self.fail(format!("{name:?} isn't a layout Herdr ships"));
+                    return self.fail(format!("{name:?} isn't a layout Zendr ships"));
                 };
                 // Theirs is kept under a name nothing else has (never over an older one).
                 if layout_path(&name).exists() {
@@ -3790,8 +3790,8 @@ impl AppWindow {
                     Ok(true) => {}
                     Ok(false) => return self.fail("no update is ready yet"),
                     Err(error) => {
-                        let reason = format!("Couldn't replace Herdr's files: {error}.");
-                        return self.fail(if cfg!(windows) { format!("Close Herdr's terminals (or restart Windows) and try again. {reason}") } else { reason });
+                        let reason = format!("Couldn't replace Zendr's files: {error}.");
+                        return self.fail(if cfg!(windows) { format!("Close Zendr's terminals (or restart Windows) and try again. {reason}") } else { reason });
                     }
                 }
                 self.drain_documents(window, cx);
@@ -4191,7 +4191,7 @@ impl AppWindow {
             Request::Run { name, args } => self.run(&name, args, window, cx),
             Request::OpenOverlay { id, spec } => self.open_overlay(id, spec, window, cx),
             Request::CloseOverlay { id } => self.close_overlay(&id, window, cx),
-            Request::SetWindowTitle(title) => window.set_window_title(title.as_deref().unwrap_or("Herdr")),
+            Request::SetWindowTitle(title) => window.set_window_title(title.as_deref().unwrap_or("Zendr")),
             Request::SetBadge(text) => crate::badge::set(text.as_deref()),
             Request::Refresh => self.refresh_mods(cx),
             Request::Control { cmd, reply } => {
@@ -4785,7 +4785,7 @@ impl AppWindow {
                 .text_xs()
                 .text_color(c("blocked"))
                 .overflow_y_scroll()
-                .child(format!("{} did not load:\n\n{}\n\nFix the files; Herdr retries on save.", inst.name, error.as_deref().unwrap_or("?")))
+                .child(format!("{} did not load:\n\n{}\n\nFix the files; Zendr retries on save.", inst.name, error.as_deref().unwrap_or("?")))
                 .into_any_element(),
             None => div().into_any_element(),
         }
@@ -5160,8 +5160,8 @@ impl AppWindow {
         let core = crate::update::core();
         let core = core.ready.filter(|_| !core.updating && core.managed.is_none());
         match (crate::update::ready(), core) {
-            (Some(a), Some(c)) => Some(format!("Herdr {a} and herdr-core {c} are ready")),
-            (Some(a), None) => Some(format!("Herdr {a} is ready")),
+            (Some(a), Some(c)) => Some(format!("Zendr {a} and herdr-core {c} are ready")),
+            (Some(a), None) => Some(format!("Zendr {a} is ready")),
             (None, Some(c)) => Some(format!("herdr-core {c} is ready")),
             (None, None) => None,
         }
@@ -7641,7 +7641,7 @@ export default class Probe extends View {
             cx.window_title()
         };
         assert_eq!(title(json!("acorn"), cx).as_deref(), Some("acorn"));
-        assert_eq!(title(json!(null), cx).as_deref(), Some("Herdr"));
+        assert_eq!(title(json!(null), cx).as_deref(), Some("Zendr"));
     }
 
     include!("window/pane_size_tests.rs");

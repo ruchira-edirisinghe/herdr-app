@@ -216,7 +216,7 @@ pub fn parse(text: &str) -> Result<Vec<KeyBinding>, String> {
                 }
             }
             if keys == ESCAPE_HATCH {
-                problems.push(format!("{ESCAPE_HATCH} is reserved for resetting Herdr"));
+                problems.push(format!("{ESCAPE_HATCH} is reserved for resetting Zendr"));
                 continue;
             }
             let action: Box<dyn gpui::Action> = if let Binding::Object(value) = action {

@@ -288,7 +288,7 @@ fn check_from(root: &Path, releases: &str) -> Result<Option<String>, String> {
     let (Some(url), Some(sha)) = (entry["url"].as_str(), entry["sha256"].as_str()) else {
         return Ok(None);
     };
-    tracing::info!("downloading Herdr {version}");
+    tracing::info!("downloading Zendr {version}");
     let work = beside(root, ".download");
     let _ = std::fs::remove_dir_all(&work);
     std::fs::create_dir_all(&work).map_err(|e| format!("{}: {e}", work.display()))?;

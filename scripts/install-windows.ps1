@@ -33,7 +33,7 @@ function Install-HerdrAppFiles($Binary, $Icon, $Destination) {
         }
         if ($installed -and (Test-Path -LiteralPath $backup)) {
             try { Remove-Item -LiteralPath $backup -Recurse -Force }
-            catch { Write-Warning "Previous build remains at $backup. Remove it after quitting Herdr." }
+            catch { Write-Warning "Previous build remains at $backup. Remove it after quitting Zendr." }
         }
     }
 }
@@ -46,19 +46,25 @@ if ($env:OS -ne "Windows_NT") { throw "This installer requires Windows." }
 Push-Location "$PSScriptRoot\.."
 try {
     cargo build --release --locked --target-dir target
-    if ($LASTEXITCODE) { throw "Herdr build failed (exit $LASTEXITCODE)." }
+    if ($LASTEXITCODE) { throw "Zendr build failed (exit $LASTEXITCODE)." }
     $dir = Join-Path $env:LOCALAPPDATA "Programs\herdr-app"
     Install-HerdrAppFiles "target\release\herdr-app.exe" "assets\icons\herdr-ui-icon-clean.svg" $dir
 } finally {
     Pop-Location
 }
 
-$menu = Join-Path ([Environment]::GetFolderPath("Programs")) "Herdr.lnk"
+# Zendr's Start menu entry replaces the one Herdr's installer made.
+$programs = [Environment]::GetFolderPath("Programs")
+$old = Join-Path $programs "Herdr.lnk"
+if (Test-Path -LiteralPath $old) { Remove-Item -LiteralPath $old -Force }
+$menu = Join-Path $programs "Zendr.lnk"
 $link = (New-Object -ComObject WScript.Shell).CreateShortcut($menu)
 $link.TargetPath = Join-Path $dir "herdr-app.exe"
 $link.WorkingDirectory = $env:USERPROFILE
 $link.Description = "Terminals and coding agents that keep running"
 $link.Save()
+# `zendr` on the command line is the app's CLI (herdr-app do/ls/shot/...).
+Set-Content -LiteralPath (Join-Path $dir "zendr.cmd") -Value "@`"%~dp0herdr-app.exe`" %*" -Encoding ascii
 
 # Keep literal %VARIABLES% and the existing registry value type in PATH.
 $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("Environment", $true)
@@ -75,4 +81,4 @@ try {
     $key.Close()
 }
 if (($env:Path -split ";") -notcontains $dir) { $env:Path += ";$dir" }
-Write-Host "Installed herdr-app. Quit and reopen Herdr to use the new build."
+Write-Host "Installed Zendr. Quit and reopen Zendr to use the new build."
