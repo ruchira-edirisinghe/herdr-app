@@ -4,12 +4,16 @@ import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, Scrollbar, InputState, Input, Popup } from "gpui-base";
 import { exec, hc, run, theme, themes, fonts, updates, telemetry, settings, layouts, shared, setShared, appHome, readTextFile, writeTextFile, playSound, props, closeOverlay, notify, window } from "herdr";
 
+import { addonMethods } from "./addons.js";
+
 const I = (name) => `frame/settings/${name}.svg`;
 
 const SECTIONS = [
   { id: "look", title: "Look", icon: "palette" },
   { id: "features", title: "Features", icon: "sliders" },
   { id: "claude", title: "Claude mods", icon: "puzzle" },
+  { id: "claude-tools", title: "Claude tools", icon: "sparkles" },
+  { id: "addons", title: "Add-ons", icon: "blocks" },
   ...(window()?.platform === "macos" ? [{ id: "keyboard", title: "Keyboard", icon: "keyboard" }] : []),
   { id: "machines", title: "Machines", icon: "server" },
   { id: "alerts", title: "Notifications", icon: "bell" },
@@ -130,12 +134,17 @@ export default class Settings extends View {
     this.claudeDone = {}; // name -> { text, until }: what just happened, said in place
     this.claudeOpen = null; // the plugin whose options show
     this.claudeInputs = {}; // "<name>.<key>" -> InputState for free-text options
+    this.addons = null; // addons/catalog.json's list once read
+    this.addonsError = null;
+    this.addonBusy = {}; // id -> what it's doing
+    this.addonView("claude"); this.addonView("general"); // their search boxes (inputs are made here, never in render)
     this.handle = cx.focus_handle();
     this.handle.focus();
     cx.spawn(async (cx) => {
       await this.load();
       if (this.section === "machines") await this.loadMachines();
       if (this.section === "claude") await this.loadClaude();
+      if (this.section === "claude-tools" || this.section === "addons") await this.loadAddons();
       cx.notify();
     });
     // After "Check now": follow the look (the answer comes from the app), then
@@ -996,7 +1005,11 @@ export default class Settings extends View {
           .pb(18)
           .child(this.heading(t, "Claude Code mods"))
           .child(this.row(t, "Next steps, session bridge and model router", "Claude Code plugins Zendr works with. Turn each on or off and set its options.",
-            this.button(t, "st-f-claude", "Open Claude mods", (_e, cx) => { this.section = "claude"; cx.spawn(async (cx) => { await this.loadClaude(); cx.notify(); }); cx.notify(); }))),
+            this.button(t, "st-f-claude", "Open Claude mods", (_e, cx) => { this.section = "claude"; cx.spawn(async (cx) => { await this.loadClaude(); cx.notify(); }); cx.notify(); })))
+          .child(this.row(t, "Claude tools and add-ons from the community", "Dozens of tools from the Herdr gallery, all off until you pick them: usage limits, session search, prompt timelines, runners, notes and more.",
+            h_flex().gap(8)
+              .child(this.button(t, "st-f-tools", "Claude tools", (_e, cx) => { this.section = "claude-tools"; cx.spawn(async (cx) => { await this.loadAddons(); cx.notify(); }); cx.notify(); }))
+              .child(this.button(t, "st-f-addons", "Add-ons", (_e, cx) => { this.section = "addons"; cx.spawn(async (cx) => { await this.loadAddons(); cx.notify(); }); cx.notify(); })))),
       );
   }
 
@@ -1350,6 +1363,7 @@ export default class Settings extends View {
               this.handle.focus();
               if (s.id === "machines") cx.spawn(async (cx) => { await this.loadMachines(); cx.notify(); });
               if (s.id === "claude") cx.spawn(async (cx) => { await this.loadClaude(); cx.notify(); });
+              if (s.id === "claude-tools" || s.id === "addons") cx.spawn(async (cx) => { await this.loadAddons(); cx.notify(); });
               cx.notify();
             })
             .child(svg(I(s.icon)).size(15).text_color(on ? t.accent : t.dim))
@@ -1419,6 +1433,10 @@ export default class Settings extends View {
                         ? this.features(t)
                       : this.section === "claude"
                         ? this.claudeMods(t)
+                      : this.section === "claude-tools"
+                        ? this.addonsPage(t, "claude")
+                      : this.section === "addons"
+                        ? this.addonsPage(t, "general")
                       : this.section === "alerts"
                         ? this.alerts(t)
                         : this.section === "privacy"
@@ -1431,3 +1449,5 @@ export default class Settings extends View {
       );
   }
 }
+
+Object.assign(Settings.prototype, addonMethods);

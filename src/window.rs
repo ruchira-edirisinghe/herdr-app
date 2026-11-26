@@ -4603,6 +4603,11 @@ impl AppWindow {
         let mut layout_changed = false;
         for (id, f) in &self.folders {
             let place = f.hint.place.as_deref().unwrap_or("right");
+            // Settings' add-ons (addons/<addon>/mods/<id>) are placed by their switch (mod.dock).
+            if is_addon_mod(id) {
+                self.seen.insert(id.clone());
+                continue;
+            }
             if !f.has_view || (shipped && place != "none") || !self.seen.insert(id.clone()) {
                 continue;
             }
@@ -5576,6 +5581,12 @@ fn visible_nodes(n: &Node) -> Vec<&Node> {
 
 fn fill_ids(n: &mut Node, m: &mut Model) {
     n.fill_ids(&mut || m.fresh_id("n"));
+}
+
+/// A mod that came from Settings' add-ons: some addons/<addon>/mods/<name> exists.
+fn is_addon_mod(name: &str) -> bool {
+    let Ok(dirs) = std::fs::read_dir(crate::mods::app_dir().join("addons")) else { return false };
+    dirs.flatten().any(|d| d.path().join("mods").join(name).join("mod.json").is_file())
 }
 
 /// Puts a block along one side of the chrome.
