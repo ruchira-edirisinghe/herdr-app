@@ -470,6 +470,14 @@ Size a layout node.
 | `px` | no |
 | `weight` | no |
 
+## `layout.arrange`
+
+Arrange mode: drag the work area's blocks onto each other's edges to move them (personal layouts).
+
+| Argument | Required |
+|---|---|
+| `on` | no |
+
 ## `layout.select`
 
 Show one child of a stack.

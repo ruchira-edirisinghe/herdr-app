@@ -263,6 +263,10 @@ Properties any node can have:
   another pane cancels. Zoomed tabs and one-pane tabs don't drag. The grip appears
   on top-edge hover, regardless of the header's position or presence. Only the grip
   starts dragging; header mods don't need drag handlers. `panes()` exposes `movable`.
+  Arrange mode (`layout.arrange`) moves whole blocks (docks) the same way: the first
+  row/column marked `"movable": true`, else the one holding the tab block, is where they
+  move. Its shown children are the docks (a child with `"movable": false` stays put); an
+  edge drop across its axis wraps the target in a new `dock-<n>` row/column.
 - `floating`: blocks over this node (below).
 - `window_drag: true`: dragging the node moves the window, a double-click
   maximizes it. A mod's own control inside opts out by stopping the press:
@@ -701,6 +705,8 @@ The main ones:
   `layout.resize {id, px | weight}`, `layout.select {stack, child}`, `layout.set {layout}`
   (personal tree edits; on shipped layouts only click/look fields change),
   `layout.reset {name?}` (reset a shipped layout and its clicks),
+  `layout.arrange {on?}` (arrange mode: the work area's blocks become cards to drag onto another
+  block's edge, or its middle to swap; personal layouts; the new tree is saved to the layout file),
   `layout.clone {name, as?}` (duplicate, then switch; default `<name>-copy`).
 - App: `mod.clone {name, as?}` (duplicate; default `<name>-copy`), `mod.open {name}` (again: closes it), `overlay.close {id?}`, `app.help` (again: closes it), `app.palette` (again: closes it), `app.settings {section?}`
   (sections: `look`, `machines`, `alerts`, `updates`, `privacy`; Machines lists, updates, renames and removes ssh machines; settings edit the same files you do).

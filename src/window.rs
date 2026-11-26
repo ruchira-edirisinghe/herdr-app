@@ -8,6 +8,7 @@ use crate::hc::Core;
 mod floats;
 mod movable;
 mod pane_drag;
+mod dock_drag;
 mod pane_size;
 mod titlebar;
 
@@ -397,6 +398,9 @@ pub struct AppWindow {
     swapped: HashMap<String, String>,
     float_drag: Option<floats::FloatDrag>,
     pane_drag: Option<pane_drag::PaneDrag>,
+    /// Arrange mode (`layout.arrange`): the work area's blocks drag as cards.
+    arranging: bool,
+    dock_drag: Option<dock_drag::DockDrag>,
     pane_grip_hover: Option<String>,
     /// Each pane's top row the grip sits centered in: its top header, else a strip.
     pane_grip_rows: RefCell<HashMap<String, f32>>,
@@ -535,6 +539,8 @@ impl AppWindow {
             swapped: HashMap::new(),
             float_drag: None,
             pane_drag: None,
+            arranging: false,
+            dock_drag: None,
             pane_grip_hover: None,
             pane_grip_rows: RefCell::default(),
             win_drag: None,
@@ -1099,6 +1105,8 @@ impl AppWindow {
         self.save();
         self.float_drag = None;
         self.pane_drag = None;
+        self.arranging = false;
+        self.dock_drag = None;
         self.float_anims.clear();
         self.float_reveal.clear();
         self.float_hover.clear();
@@ -3677,6 +3685,12 @@ impl AppWindow {
                     self.apply_look(window, cx);
                 }
             }
+            "layout.arrange" => {
+                let on = a.get("on").and_then(Value::as_bool).unwrap_or(!self.arranging);
+                if let Err(e) = self.set_arranging(on, cx) {
+                    return self.fail(e);
+                }
+            }
             "layout.select" => {
                 let (s, ch) = (Self::arg(a, "stack").unwrap_or_default(), Self::arg(a, "child").unwrap_or_default());
                 if !self.chrome.select(s, ch) {
@@ -5690,6 +5704,7 @@ impl Render for AppWindow {
         let tracker = self.float_tracker(cx);
         let win_tracker = self.window_tracker(cx);
         let pane_drag = self.pane_drag_layer(cx);
+        let arrange = self.arrange_layer(cx);
         div()
             .id("herdr")
             .track_focus(&self.focus)
@@ -5741,6 +5756,8 @@ impl Render for AppWindow {
                     if this.pane_drag.is_some() {
                         this.cancel_pane_drag(cx);
                         cx.stop_propagation();
+                    } else if this.cancel_dock_drag(cx) {
+                        cx.stop_propagation();
                     } else if cx.stop_active_drag(window) {
                         cx.stop_propagation();
                     }
@@ -5767,6 +5784,7 @@ impl Render for AppWindow {
                 this.finish_divider_drag(window, cx);
             }))
             .child(tree)
+            .children(arrange)
             .children(overlays)
             .children(tracker)
             .children(win_tracker)
