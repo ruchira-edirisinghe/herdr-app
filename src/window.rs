@@ -5591,8 +5591,16 @@ fn dock(root: &mut Node, block: Node, place: &str, wrapper_id: String) {
     let toast = old.toast.take();
     let terminal_menu = old.terminal_menu.take();
     let link_handlers = std::mem::take(&mut old.link_handlers);
+    // The other root-only fields go up too: left inside, a custom titlebar would turn back
+    // into the system one.
+    let (titlebar, traffic_lights) = (old.titlebar.take(), old.traffic_lights.take());
+    let (preview, cloned_from) = (old.preview.take(), old.cloned_from.take());
     let children = if first { vec![block, old] } else { vec![old, block] };
     let mut wrapper = Node::container(wrapper_id, axis, children);
+    wrapper.titlebar = titlebar;
+    wrapper.traffic_lights = traffic_lights;
+    wrapper.preview = preview;
+    wrapper.cloned_from = cloned_from;
     wrapper.toast = toast;
     wrapper.terminal_menu = terminal_menu;
     wrapper.link_handlers = link_handlers;
@@ -5915,6 +5923,23 @@ fn reconcile_core_update_error(dismissed: &mut Option<String>, core: &crate::upd
 mod tests {
     use gpui::{div, point, px, size, Context, IntoElement, Render, TestAppContext, Window};
     use gpui::prelude::*;
+
+    #[test]
+    fn docking_at_the_root_keeps_the_custom_titlebar() {
+        use crate::layout::{Content, Node, Titlebar};
+        let mut root: Node = serde_json::from_value(serde_json::json!({
+            "id": "root", "type": "row", "titlebar": "none", "traffic_lights": [12, 16], "toast": "t",
+            "children": [{"id": "a", "type": "block", "content": {"tab": "active"}}]
+        })).unwrap();
+        let block = Node::block("pets", Content::Mod { name: "pets".into(), props: serde_json::Value::Null });
+        super::dock(&mut root, block, "bottom", "r1".into());
+        assert_eq!(root.id, "r1");
+        assert_eq!(root.titlebar, Some(Titlebar::Layout));
+        assert_eq!(root.traffic_lights, Some([12.0, 16.0]));
+        assert_eq!(root.toast.as_deref(), Some("t"));
+        let inner = root.find("root").unwrap();
+        assert!(inner.titlebar.is_none() && inner.traffic_lights.is_none());
+    }
 
     #[test]
     fn close_only_walks_hidden_children_on_older_cores() {
