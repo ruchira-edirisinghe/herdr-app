@@ -62,7 +62,7 @@ const clock = (ms) => { const d = new Date(ms); return `${d.getHours()}:${String
 
 // What the app uses when settings.json names no font (settings.rs).
 const DEFAULT_FONT = "JetBrains Mono";
-const DEFAULT_UI_FONT = "Geist";
+const DEFAULT_UI_FONT = "Google Sans";
 
 export default class Settings extends View {
   init(_props, cx) {
