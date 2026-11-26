@@ -34,17 +34,27 @@ const NOTE_KINDS = [
 // Settings → Features: what Zendr shows (settings.json `features.<id>`). Each is on
 // unless turned off, except those marked `off`. [id, title, about, off?]
 const FEATURE_GROUPS = [
-  ["Panels", [
+  ["Panels and toolbar", [
     ["hub", "Hub", "The Hub button in the toolbar and its drawer: the coordinator, every agent, and the messages between sessions."],
     ["bell", "Notifications button", "The Notifications button in the toolbar, with its unread count and the drawer."],
+    ["graph", "Source control graph", "The Graph button in the toolbar and its drawer: commits, branch lines, and each commit's files."],
+    ["code_view", "Explorer and code view", "The Explorer and Code buttons, and the code view beside the terminal."],
+    ["split_buttons", "New terminal buttons", "The toolbar buttons that open a terminal to the right or below. The keys work either way."],
+    ["arrange", "Arrange blocks", "The toolbar button that turns the panels into cards you drag to new places."],
   ]],
   ["Sidebar and sessions", [
     ["space_details", "Space details", "Under each space: the ports its programs listen on, its pull request and its session-bridge status."],
     ["agent_summaries", "What each agent is doing", "Each agent's current task and a one-line summary in the Sessions list."],
     ["agents_list", "Separate Agents list", "List agents again in their own section under the spaces, by priority or by space, instead of inside each space.", true],
     ["session_colors", "Session colours", "A colour on each session's row, tab and hub card."],
+    ["session_counts", "Session counts", "How many sessions each space has, and in all, beside the names. A folded space keeps its count."],
   ]],
   ["Code view and panes", [
+    ["code_edit", "Editing", "Edit mode in the code view: change files and save them. Off: the code view only shows files and their changes."],
+    ["file_icons", "File-type icons", "A coloured icon for each file's type in the explorer, the tabs, Changes and the graph."],
+    ["lang_detect", "Language detection", "Tell a file's language from a shebang, a modeline or its content when its name doesn't say."],
+    ["code_zoom", "Ctrl + mouse wheel zoom", "Make the code bigger or smaller with Ctrl and the mouse wheel, to see fewer or more lines."],
+    ["vscode_ext", "VS Code extensions", "Use the colour themes, code colours and languages of the VS Code extensions you have installed."],
     ["hints", "Shortcut hints", "The line of keyboard shortcuts under the code view."],
     ["pane_buttons", "Always show pane buttons", "Show a pane's header buttons all the time, not only when the pointer is over it.", true],
   ]],
