@@ -563,6 +563,28 @@ Toggle the command palette: every command by name, with its key; calling again c
 
 No arguments.
 
+## `remote.pair`
+
+Let the Zendr phone app reach this computer: turns the phone server on and returns the pairing link, its QR code (rows of 0/1) and the addresses. lan: answer the local network too, not only Tailscale. reset: a new token, which unpairs every phone.
+
+| Argument | Required |
+|---|---|
+| `lan` | no |
+| `reset` | no |
+| `port` | no |
+
+## `remote.stop`
+
+Turn the phone server off. Paired phones reconnect when it is on again.
+
+No arguments.
+
+## `remote.status`
+
+Whether the phone server is on, its port, and whether the local network may reach it.
+
+No arguments.
+
 ## `app.settings`
 
 Open the settings (section: look, alerts, updates).
