@@ -3607,6 +3607,75 @@ impl AppWindow {
                 }
                 self.sync_folders(window, cx);
             }
+            // Settings' add-ons switch: show a mod where its mod.json asks (once), or take every copy out.
+            "mod.dock" => {
+                let name = Self::arg(a, "name").unwrap_or_default().to_owned();
+                // A folder copied in a moment ago: a first sighting docks it by itself.
+                self.sync_folders(window, cx);
+                let Some(f) = self.folders.get(&name) else { return self.fail(format!("no mod folder {name:?}")) };
+                // `into`: a stack takes it as a child (its id is the mod's name, for layout.select);
+                // any other node gets it beside, in a row. Else `place`, else mod.json's place.
+                let into = Self::owned(a, "into");
+                let place = Self::owned(a, "place").or_else(|| f.hint.place.clone()).unwrap_or_else(|| "right".into());
+                let size = a.get("size").and_then(Value::as_f64).map(|v| v as f32).or(f.hint.size).unwrap_or(320.0);
+                let has_view = f.has_view;
+                let shown = self.chrome.walk().iter().any(|n| matches!(n.content(), Some(Content::Mod { name: m, .. }) if *m == name));
+                if has_view && (into.is_some() || place != "none") && !shown {
+                    if shipped_layouts().contains(&self.layout_name.as_str()) {
+                        return self.fail("Zendr's own layouts can't take new blocks: clone one first");
+                    }
+                    let id = if self.chrome.find(&name).is_none() { name.clone() } else { self.model.fresh_id("b") };
+                    let mut block = Node::block(id, Content::Mod { name: name.clone(), props: Value::Null });
+                    match into.as_deref() {
+                        Some(target) => {
+                            let Some(t) = self.chrome.find(target) else { return self.fail(format!("no layout node {target:?}")) };
+                            if matches!(t.kind, Kind::Stack { .. }) {
+                                self.chrome.find_mut(target).and_then(Node::children_mut).map(|c| c.push(block));
+                            } else {
+                                block.size = Some(Span::Px { px: size });
+                                let wrapper = self.model.fresh_id("r");
+                                self.chrome.split(target, Axis::Row, block, wrapper);
+                                // The node it went beside fills what's left of the row (a status bar's
+                                // fixed 28 px height would otherwise become its width).
+                                if let Some(n) = self.chrome.find_mut(target) { n.size = Some(Span::Weight { weight: 1.0 }); }
+                            }
+                        }
+                        None => {
+                            block.size = Some(Span::Px { px: size });
+                            dock(&mut self.chrome, block, &place, self.model.fresh_id("r"));
+                        }
+                    }
+                    self.seen.insert(name);
+                    self.reset_divider_interaction();
+                    self.save();
+                    self.sync(window, cx);
+                }
+            }
+            "mod.undock" => {
+                let name = Self::arg(a, "name").unwrap_or_default().to_owned();
+                let ids: Vec<String> = self.chrome.walk().iter()
+                    .filter(|n| matches!(n.content(), Some(Content::Mod { name: m, .. }) if *m == name))
+                    .map(|n| n.id.clone()).collect();
+                // Its overlays go too: a popup or a hidden tracker it keeps open would otherwise
+                // outlive the mod's folder.
+                let overlays: Vec<String> = self.overlays.iter()
+                    .filter(|o| o.layout.is_none() && self.copies.get(&o.slot).is_some_and(|c| c.inst.name == name))
+                    .map(|o| o.id.clone()).collect();
+                for id in &overlays {
+                    self.close_overlay(id, window, cx);
+                }
+                if !ids.is_empty() {
+                    if shipped_layouts().contains(&self.layout_name.as_str()) {
+                        return self.fail("Zendr's own layouts can't lose blocks: clone one first");
+                    }
+                    for id in &ids {
+                        self.chrome.remove(id);
+                    }
+                    self.reset_divider_interaction();
+                    self.save();
+                    self.sync(window, cx);
+                }
+            }
             "layout.set" if shipped_layouts().contains(&self.layout_name.as_str()) => {
                 let n = match serde_json::from_value::<Node>(a.get("layout").cloned().unwrap_or_default()) {
                     Ok(n) => n,

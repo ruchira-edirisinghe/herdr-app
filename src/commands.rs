@@ -80,6 +80,8 @@ pub const COMMANDS: &[Command] = &[
     cmd("layout.switch", &[opt("name")], "Show a layout (layouts/<name>.json), or the next one."),
     cmd("layout.clone", &[req("name"), opt("as")], "Duplicate a layout as <name>-copy (or as), then show it."),
     cmd("mod.clone", &[req("name"), opt("as")], "Duplicate a mod as <name>-copy (or as)."),
+    cmd("mod.dock", &[req("name"), opt("into"), opt("place"), opt("size")], "Show a mod's block (once): into a stack or beside a node (`into`), else at `place` or where its mod.json places it (personal layouts)."),
+    cmd("mod.undock", &[req("name")], "Take every block of a mod out of the layout (personal layouts) and close its overlays."),
     cmd("layout.set", &[req("layout")], "Replace a personal layout tree; shipped layouts accept only click/look fields (not structure)."),
     cmd("layout.toggle", &[req("id")], "Hide or show a layout node."),
     cmd("layout.show", &[req("id")], "Show a layout node."),
