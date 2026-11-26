@@ -550,8 +550,10 @@ shortcuts must then be added by hand.
 ```
 
 - Sections: `global`, `layout:<name>` (while `layouts/<name>.json` shows),
-  `terminal` (a terminal has focus), `mod:<name>`. The more specific section
-  wins: `layout:terminals` over `global`, `terminal` over both.
+  `terminal` (a terminal has focus), `mod:<name>`, `input` (any text box or
+  code editor has focus; it beats the box's own keys, such as ctrl-f find).
+  The more specific section wins: `layout:terminals` over `global`, `terminal`
+  over both.
 - An action is a command (`name`, or `name:value`: the value fills the
   command's first argument), `send:<text>` (types into the terminal),
   `<mod>.<command>` (delivered to that mod's `nextCommand()`), or `terminal`
